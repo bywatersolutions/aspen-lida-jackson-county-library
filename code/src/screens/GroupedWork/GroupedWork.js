@@ -3,15 +3,14 @@ import { SearchIcon } from 'lucide-react-native';
 import { Button, ButtonGroup, ButtonIcon, ButtonText, Box, Center, HStack, Text, SafeAreaView, ScrollView } from '@gluestack-ui/themed';
 import { useRoute } from '@react-navigation/native';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import _ from 'lodash';
-import { useToken } from 'native-base';
+import {useColorModeValue, useToken} from 'native-base';
 import React from 'react';
 
 // custom components and helper files
-import { loadError } from '../../components/loadError';
-import { loadingSpinner, LoadingSpinner } from '../../components/loadingSpinner';
+import {loadError} from '../../components/loadError';
+import { LoadingSpinner } from '../../components/loadingSpinner';
 import { DisplaySystemMessage } from '../../components/Notifications';
 import { GroupedWorkContext, LanguageContext, LibrarySystemContext, SystemMessagesContext, ThemeContext, UserContext } from '../../context/initialContext';
 import { startSearch } from '../../helpers/RootNavigator';
@@ -19,7 +18,7 @@ import { getTermFromDictionary } from '../../translations/TranslationService';
 import { getFirstRecord, getVariations } from '../../util/api/item';
 import { getLinkedAccounts } from '../../util/api/user';
 import { getGroupedWork } from '../../util/api/work';
-import { decodeHTML, urldecode } from '../../util/apiAuth';
+import {decodeHTML, passUserToDiscovery} from '../../util/apiAuth';
 import { getPickupLocations, getPickupSublocations } from '../../util/loadLibrary';
 import AddToList from '../Search/AddToList';
 import Variations from './Variations';
@@ -145,6 +144,7 @@ const DisplayGroupedWork = (payload) => {
                <Variations format={format} data={groupedWork} />
                <AddToList itemId={groupedWork.id} btnStyle="lg" />
                {getDescription(groupedWork.description)}
+               {getBibliographicInformationLink(groupedWork.id)}
           </Box>
      );
 };
@@ -248,6 +248,26 @@ const getFormats = (formats) => {
                          })}
                     </ButtonGroup>
                </>
+          );
+     } else {
+          return null;
+     }
+};
+
+const getBibliographicInformationLink = (groupedWorkId) => {
+     const { language } = React.useContext(LanguageContext);
+     const { theme } = React.useContext(ThemeContext);
+     const { library } = React.useContext(LibrarySystemContext);
+     const backgroundColor = useToken('colors', useColorModeValue('warmGray.200', 'coolGray.900'));
+     const textColor = useToken('colors', useColorModeValue('gray.800', 'coolGray.200'));
+
+     if (groupedWorkId) {
+          return (
+          <Button onPress={async () => await passUserToDiscovery(library.baseUrl, 'GroupedWork', user.id, backgroundColor, textColor, groupedWorkId)} bgColor={theme['colors']['secondary']['500']}>
+               <ButtonText color={theme['colors']['secondary']['500-text']}>
+                    {getTermFromDictionary(language, 'more_information')}
+               </ButtonText>
+          </Button>
           );
      } else {
           return null;
