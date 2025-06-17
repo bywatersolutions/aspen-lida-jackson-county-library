@@ -1,7 +1,6 @@
 import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect } from '@react-navigation/native';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import * as Location from 'expo-location';
 import * as SecureStore from 'expo-secure-store';

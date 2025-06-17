@@ -1,6 +1,5 @@
 import { Badge, BadgeText, Box, Center, HStack, Pressable, Text, VStack } from '@gluestack-ui/themed';
 import { useRoute } from '@react-navigation/native';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import _ from 'lodash';
 import React from 'react';

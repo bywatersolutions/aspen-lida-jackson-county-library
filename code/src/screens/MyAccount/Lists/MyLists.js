@@ -1,6 +1,5 @@
 import { useIsFocused, useNavigation, useRoute } from '@react-navigation/native';
 import { useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import _ from 'lodash';
 import moment from 'moment';

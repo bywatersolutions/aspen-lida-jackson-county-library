@@ -2,7 +2,6 @@ import { MaterialIcons } from '@expo/vector-icons';
 import { useFocusEffect, useNavigation } from '@react-navigation/native';
 import { ListItem } from '@rneui/themed';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import _ from 'lodash';
 import { Actionsheet, Alert, AlertDialog, Box, Button, Center, CheckIcon, FlatList, FormControl, HStack, Icon, Pressable, ScrollView, Select, Text, VStack } from 'native-base';

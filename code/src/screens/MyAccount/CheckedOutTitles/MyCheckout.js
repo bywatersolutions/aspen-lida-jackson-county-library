@@ -1,5 +1,4 @@
 import { MaterialIcons } from '@expo/vector-icons';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import _ from 'lodash';
 import { Actionsheet, Box, HStack, Icon, Pressable, Text, VStack } from 'native-base';

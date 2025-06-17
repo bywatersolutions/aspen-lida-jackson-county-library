@@ -1,6 +1,5 @@
 import { useRoute } from '@react-navigation/native';
 import { useQueryClient } from '@tanstack/react-query';
-import CachedImage from 'expo-cached-image';
 import { Image } from 'expo-image';
 import { LinearGradient } from 'expo-linear-gradient';
 import _ from 'lodash';
