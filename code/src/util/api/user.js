@@ -1394,11 +1394,11 @@ export async function fetchCampaigns(page = 1, pageSize = 20, filter = 'enrolled
      // console.log("api response: ", response);
      let data = [];
      let morePages = false;
-     console.log("FULL API response data:", JSON.stringify(response.data, null, 2));
+     // console.log("FULL API response data:", JSON.stringify(response.data, null, 2));
 
      if (response.ok) {
           data = response.data;
-          console.log("Campaigns returned: ", data.result?.campaigns);
+          // console.log("Campaigns returned: ", data.result?.campaigns);
           if (data.result?.page_current !== data.result?.page_total) {
                morePages = true;
           }
@@ -1615,3 +1615,47 @@ export async function optUserOutOfCampaignLeaderboard(campaignId, linkedUserId, 
           return false;
      } 
 }
+
+/**
+ * Add Progress to Activity (Milestone or Extra Credit)
+ * @param {string} activityId 
+ * @param {string} linkedUserId 
+ * @param {string} activityType - 'milestone' or 'extraCredit'
+ * @param {string} filter 
+ * @param {string} url 
+ * @param {string} language
+ * @returns 
+ */
+export async function addActivityProgress(activityId, linkedUserId, activityType, filter = 'enrolled', url, language = 'en', campaignId){
+     const postBody = await postData();
+     const api = create({
+          baseURL: url + '/API',
+          header: getHeaders(true),
+          auth: createAuthTokens(),
+          params: {
+               activityId: activityId,
+               activityType: activityType,
+               filter: filter,
+               linkedUserId: linkedUserId,
+               language,
+               campaignId
+          },
+     });
+
+     const response = await api.post('/UserAPI?method=addActivityProgress', postBody);
+     let data = [];
+
+     if (response.ok) {
+          data = response.data;
+          if (data.result && data.result.success) {
+               return true;
+          } else {
+               console.log('Failed to add progress: ', data.message);
+               return false;
+          }
+     } else {
+          console.log(response);
+          return false;
+     } 
+}
+

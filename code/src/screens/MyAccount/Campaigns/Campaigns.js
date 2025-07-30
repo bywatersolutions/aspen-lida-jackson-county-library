@@ -33,10 +33,10 @@ import {
   ChevronDownIcon,
   CheckIcon
 } from '@gluestack-ui/themed';
-import { fetchCampaigns, unenrollCampaign, enrollCampaign, optIntoCampaignEmails, optUserOutOfCampaignLeaderboard, optUserInToCampaignLeaderboard} from '../../../util/api/user';
+import { fetchCampaigns, unenrollCampaign, enrollCampaign, optIntoCampaignEmails, optUserOutOfCampaignLeaderboard, optUserInToCampaignLeaderboard, addActivityProgress } from '../../../util/api/user';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 import { UserInterfaceIdiom } from 'expo-constants';
-import { LanguageContext, LibrarySystemContext, UserContext } from '../../../context/initialContext';
+import { LanguageContext, LibrarySystemContext, UserContext, ThemeContext } from '../../../context/initialContext';
 import { filter } from 'lodash';
 import { Image } from 'expo-image';
 import { setCurrentClient } from '@sentry/react-native';
@@ -70,6 +70,12 @@ export const MyCampaigns = () => {
 	const { user} = React.useContext(UserContext);
 	const { library } = React.useContext(LibrarySystemContext);
 	const { language } = React.useContext(LanguageContext);
+	const { theme, textColor, colorMode } = React.useContext(ThemeContext);
+	
+	React.useEffect(() => {
+		queryClient.invalidateQueries(['all_campaigns']);
+	}, [filterBy]);
+
 
 	const [isLoading, setLoading] = React.useState(false);
 	const [filterBy, setFilterBy] = React.useState('enrolled');
@@ -80,6 +86,8 @@ export const MyCampaigns = () => {
 	const [showActionSheet, setShowActionSheet] = React.useState(false);
 	const [selectedLinkedUserId, setSelectedLinkedUserId] = React.useState(null);
 
+
+
 	React.useLayoutEffect(() => {
 		navigation.setOptions({
 			headerLeft: () => <Box />,
@@ -87,17 +95,19 @@ export const MyCampaigns = () => {
 	}, [navigation]);
 
 	//Utility Functions
-	/*const buildImageUrl = (imagePath) => {
-		if (!imagePath || !library.baseUrl) return '';
-		return `${library.baseUrl}${imagePath.startsWith('/') ? imagePath : '/' + imagePath}`;
-	};*/
 	const buildImageUrl = (imagePath) => {
 		if (!imagePath || !library.baseUrl) return '';
-		return library.baseUrl + imagePath;
+		return `${library.baseUrl}${imagePath}?v=${Date.now()}`;
+		// return `${library.baseUrl}${imagePath}?v=${Date.now()}`;
+		// return String(library.baseUrl) + String(imagePath);
 	};
 
 	const formatDate = (dateString) => {
-		return dateString ? new Date(dateString).toLocaleDateString() : 'N/A';
+		return dateString ? new Date(dateString).toLocaleDateString(undefined, {
+			month: 'short',
+			day: 'numeric',
+			year: '2-digit'
+		}) : 'N/A';
 	};
 
 	const handleShareOnSocial = async (imageUrl) => {
@@ -142,10 +152,11 @@ export const MyCampaigns = () => {
 
 	// Data fetching
 	const { status, data, error, isFetching, refetch} = useQuery(
-		['all_campaigns', library.baseUrl, language, filterBy], 
+		['all_campaigns', library.baseUrl, language, filterBy, page], 
 		() => fetchCampaigns(page, PAGE_SIZE, filterBy, library.baseUrl), 
 		{
-			initialData: { campaigns: campaigns },
+			placeholderData: () => ({ campaigns: campaigns}),
+			// initialData: { campaigns: campaigns },
 			keepPreviousData: true,
 			staleTime: 1000,
 			onSuccess: (data) => {
@@ -153,13 +164,13 @@ export const MyCampaigns = () => {
 					updateCampaigns(data.campaigns);
 				}
 			},
-		  	onSettle: () => setLoading(false),  
+		  	onSettled: () => setLoading(false),  
 		}
 	);
 
-	useEffect(() => {
-		queryClient.invalidateQueries(['all_campaigns']);
-	}, [filterBy]);
+	// useEffect(() => {
+	// 	queryClient.invalidateQueries(['all_campaigns']);
+	// }, [filterBy]);
 
 	// Action handlers
 	const handleEnrollUnenroll = async () => {
@@ -177,7 +188,7 @@ export const MyCampaigns = () => {
 			await refetch();
 			handleCloseActions();
 		} catch (error) {
-			console.log("Error in enroll / unenroll: ", error);
+			console.error("Error in enroll / unenroll: ", error);
 		}
 	};
 
@@ -193,7 +204,7 @@ export const MyCampaigns = () => {
 			await refetch();
 			handleCloseActions();
 		} catch (error) {
-			console.log("Error in opt in / out of email notifications: ", error);
+			console.error("Error in opt in / out of email notifications: ", error);
 		}
 	};
 
@@ -212,7 +223,7 @@ export const MyCampaigns = () => {
 			await refetch();
 			handleCloseActions();
 		} catch (error) {
-			console.log("Error in opt in / out of leaderboard: ", error);
+			console.error("Error in opt in / out of leaderboard: ", error);
 		}
 	};
 	
@@ -235,7 +246,6 @@ export const MyCampaigns = () => {
 		setShowActionSheet(false);
 	};
 
-	// Reusable Components
 	const RewardImage = ({ imageUrl, rewardName, canShare, onShare }) => {
 		if (!imageUrl) return null;
 
@@ -243,28 +253,37 @@ export const MyCampaigns = () => {
 			<VStack space="sm">
 				<Image
 					source={{ uri: imageUrl }}
-					contentFit="contain"
 					style={{ width: 100, height: 100 }}
-					alt={rewardName || 'Reward image'}
-					onError={(error) => console.log('Image failed to load:', error, imageUrl)}
-					onLoad={() => console.log('Image loaded successfully:', imageUrl)}
 				/>
-				
-
-				{canShare && onShare && (
+					{canShare && onShare ? (
 					<Pressable onPress={() => onShare(imageUrl)}>
-						<Text color="$gray500">Share on Social Media</Text>
+						<Text color={textColor}>{getTermFromDictionary(language, 'share_on_social_media')}</Text>
 					</Pressable>
-				)}
+				) : null}
 			</VStack>
 		);
 	};
 
 	const RewardDisplay = ({ item, imageUrl, type = 'campaign' }) => {
 		const displayName = item.displayName === 1;
-		const hasImage = item.rewardType === 1 && item.rewardExists === 1 && item.rewardImage;
+		let hasImage;
+		let actualImageUrl = imageUrl;
+
+		// Check if we should show placeholder
+		if (item.isPlaceholderImage) {
+			// Use the placeholder image URL instead
+			actualImageUrl = buildImageUrl(item.badgeImage); // This should now be the placeholder
+			hasImage = true; // Show the placeholder image
+		} else {
+			// Original logic for actual images
+			if (type === 'campaign') {
+				hasImage = item.rewardType === 1 && item.rewardExists && item.badgeImage;
+			} else {
+				hasImage = item.rewardType === 1 && item.rewardExists && item.rewardImage;
+			}
+		}
+
 		const rewardName = item.rewardName || 'No Reward';
-		
 		const canShare = type === 'campaign' 
 			? (item.campaignRewardGiven || (item.awardAutomatically && item.campaignIsComplete))
 			: type === 'milestone'
@@ -274,29 +293,102 @@ export const MyCampaigns = () => {
 		return (
 			<Box flex={type === 'campaign' ? 3 : 1}>
 				{displayName && rewardName && (
-					<Text color={type === 'campaign' ? "$emerald600" : "$textLight900"}>
+					<Text color={textColor}>
 						{rewardName}
 					</Text>
 				)}
-				{hasImage && imageUrl && (
-					<RewardImage 
-						imageUrl={imageUrl}
-						rewardName={rewardName}
-						canShare={canShare}
-						onShare={handleShareOnSocial}
-					/>
+				{hasImage && actualImageUrl && (
+					<>
+						<RewardImage 
+							imageUrl={actualImageUrl}
+							rewardName={rewardName}
+							canShare={canShare && !item.isPlaceholderImage} // Don't allow sharing placeholders
+							onShare={handleShareOnSocial}
+						/>
+					</>
 				)}
 			</Box>
 		);
 	};
 
-	const ActivityTable = ({ items, title, type }) => {
+	// const RewardDisplay = ({ item, imageUrl, type = 'campaign' }) => {
+	// 	const displayName = item.displayName === 1;
+	// 	let hasImage;
+
+	// 	if (type === 'campaign') {
+	// 		hasImage = item.rewardType === 1 && item.rewardExists && item.badgeImage;
+	// 	}else{
+	// 		hasImage = item.rewardType === 1 && item.rewardExists && item.rewardImage;
+	// 	}
+	// 	const rewardName = item.rewardName || 'No Reward';
+	// 	const canShare = type === 'campaign' 
+	// 		? (item.campaignRewardGiven || (item.awardAutomatically && item.campaignIsComplete))
+	// 		: type === 'milestone'
+	// 		? (item.milestoneRewardGiven || (item.awardAutomatically && item.milestoneIsComplete))
+	// 		: (item.rewardGiven || (item.awardAutomatically && item.extraCreditActivityComplete));
+
+	// 	return (
+	// 		<Box flex={type === 'campaign' ? 3 : 1}>
+	// 			{displayName && rewardName && (
+	// 				<Text color={textColor}>
+	// 					{rewardName}
+	// 				</Text>
+	// 			)}
+	// 			{hasImage && imageUrl && (
+	// 				<>
+	// 					<RewardImage 
+	// 						imageUrl={imageUrl}
+	// 						rewardName={rewardName}
+	// 						canShare={canShare}
+	// 						onShare={handleShareOnSocial}
+	// 					/>
+	// 				</>
+	// 			)}
+	// 		</Box>
+	// 	);
+	// };
+
+	const ActivityTable = ({ items, title, type, campaignId, linkedUserId, isEnrolled }) => {
+
 		if (!Array.isArray(items) || items.length === 0) {
-			return (
-				<Text color="$gray400" fontStyle="italic">
-					No {title.toLowerCase()} available
-				</Text>
-			);
+			return null;
+		}
+
+		const handleAddProgress = async (item) => {
+			try {
+				const activityType = type === 'milestone' ? 'milestone' : 'extraCredit';
+				
+				await addActivityProgress(item.id, linkedUserId, activityType, filterBy, library.baseUrl, language, campaignId);
+
+				await refetch()
+			} catch (error) {
+				console.error("Error adding progress: ", error);
+			}
+		}
+
+		const shouldShowButton = (item) => {
+			if (!isEnrolled) {
+				return false;
+			}
+
+			if (type === 'milestone') {
+				return item.milestoneType === 'manual' && item.allowPatronProgressInput;
+			}
+			if (type === 'activity') {
+				return item.allowPatronProgressInput;
+			}
+			return false;
+		};
+
+
+		const shouldDisableButton = (item) =>{
+			if (type === 'milestone') {
+				console.log("===MILESTONE===", item)
+				return item.isComplete && !item.progressBeyondOneHundredPercent;
+			} else if (type === 'activity') {
+				return item.isComplete;
+			}
+			return false;
 		}
 
 		return (
@@ -306,33 +398,55 @@ export const MyCampaigns = () => {
 				</Text>
 				<VStack space="md">
 					<HStack justifyContent="space-between" pb="$1" borderBottomWidth={1}>
-						<Text flex={2} fontWeight="$bold">Name</Text>
-						<Text flex={1} fontWeight="$bold">Goal</Text>
-						<Text flex={1} fontWeight="$bold">Reward</Text>
+						<Text flex={3} fontWeight="$bold">{getTermFromDictionary(language, 'activity_name')}</Text>
+						<Text flex={2} fontWeight="$bold">{getTermFromDictionary(language, 'activity_goal')}</Text>
+						<Text flex={2} fontWeight="$bold">{getTermFromDictionary(language, 'activity_reward')}</Text>
+						<Text flex={2} fontWeight="$bold">{getTermFromDictionary(language, 'progress')}</Text>
 					</HStack>
 
 					{items.map((item, i) => {
 						if (!item) return null;
 						
 						const imageUrl = buildImageUrl(item.rewardImage);
+						const showButton = shouldShowButton(item);
+						const isDisabled = shouldDisableButton(item);
 
 						return(
 							<HStack 
 								key={i} 
 								justifyContent="space-between"
 								alignItems="center"
+								space="md"
 							>
 								<Text flex={2}>
-									{item.name || ''}
+									{String(item.name || '')}
 								</Text>
 								<Text flex={1}>
 									{String(item.completedGoals || 0)} / {String(item.totalGoals || 0)}
 								</Text>
-								<RewardDisplay 
-									item={item}
-									imageUrl={imageUrl}
-									type={type}
-								/>
+								<Box width={120}>
+									<RewardDisplay 
+										item={item}
+										imageUrl={imageUrl}
+										type={type}
+									/>
+								</Box>
+								<Box flex={1} alignItems="center">
+									{!!showButton && (
+										<Button
+											size="sm"
+											onPress={() => handleAddProgress(item)}
+											isDisabled={isDisabled}
+											opacity={isDisabled ? 0.5 : 1}
+											width="100%"
+											px={2}
+										>
+											<ButtonText fontSize={10} textAlign="center">
+												{getTermFromDictionary(language, 'add_progress')}
+											</ButtonText>
+										</Button>
+									)}
+								</Box>
 							</HStack>
 						);
 					})}
@@ -342,21 +456,24 @@ export const MyCampaigns = () => {
 	};
 
 	const renderCampaignItem = ({ item, onOpenActions, onToggle, expanded }) => {
-		if (!item) return null;
+
+		// /*if (!item) return null;*/
+		 if (!item) {
+    		return null;
+  		}
 
 		const startDate = formatDate(item.startDate);
 		const endDate = formatDate(item.endDate);
 		const campaignImageUrl = buildImageUrl(item.badgeImage);
-		console.log('Generated URL:', campaignImageUrl);
-console.log('Original item.badgeImage:', item.badgeImage);
-console.log('library.baseUrl:', library.baseUrl);
+		const linkedUserIdForActivities = filterBy === 'linkedUserCampaigns' ? item.linkedUserId : null;
+		const isUserEnrolled = item.enrolled || false;
 
 		return (
 			<VStack space="md" px="$4" py="$3" key={item.id}>
 				<HStack justifyContent="space-between" borderBottomWidth={1} pb="$2">
-					<Text flex={2} fontWeight="$bold">Campaign Name</Text>
-					<Text flex={3} fontWeight="$bold">Reward</Text>
-					<Text flex={2} fontWeight="$bold">Dates</Text>
+					<Text flex={2} fontWeight="$bold">{getTermFromDictionary(language, 'campaign_name_header')}</Text>
+					<Text flex={3} fontWeight="$bold">{getTermFromDictionary(language, 'campaign_reward')}</Text>
+					<Text flex={2} fontWeight="$bold">{getTermFromDictionary(language, 'campaign_dates')}</Text>
 					<Text flex={1} fontWeight="$bold"> </Text>
 					<Text flex={1} fontWeight="$bold"> </Text>
 				</HStack>
@@ -369,15 +486,15 @@ console.log('library.baseUrl:', library.baseUrl);
 					borderColor="$coolGray200"
 				>
 					<Text flex={2}>
-						{item.name || ''}
+						{String(item.name || '')}
 					</Text>
 					<RewardDisplay 
 						item={item}
 						imageUrl={campaignImageUrl}
 						type="campaign"
 					/>
-					<Text flex={2} color="$gray500">
-						{startDate} - {endDate}
+					<Text flex={2} color={textColor}>
+						{startDate} {'\n'} - {'\n'}{endDate}
 					</Text>
 					<Button
 						onPress={onToggle}
@@ -391,26 +508,39 @@ console.log('library.baseUrl:', library.baseUrl);
 					</Button>
 					<Button 
 						size="sm"
-						flex={1}
 						onPress={() => onOpenActions(item, filterBy === 'linkedUserCampaigns' ? item.linkedUserId : null)}
 						accessibilityLabel={`Open actions menu for ${item.name || 'campaign'}`}
 					>
-						<ButtonText>Actions</ButtonText>
+						<ButtonText>{getTermFromDictionary(language, 'campaign_action_button')}</ButtonText>
 					</Button>
 				</HStack>
 
 				{expanded && (
 					<Box px="$2" py="$2" bg="$coolGray100" borderRadius="$md">
-						<ActivityTable 
-							items={item.milestones}
-							title="Milestones"
-							type="milestone"
-						/>
-						<ActivityTable 
-							items={item.extraCreditActivities}
-							title="Extra Credit Activities"
-							type="activity"
-						/>
+						{(!Array.isArray(item.milestones) || item.milestones.length === 0) && (!Array.isArray(item.extraCreditActivities) || item.extraCreditActivities.length === 0) ? (
+							<Text color="$textLight900" fontStyle="italic">
+								{getTermFromDictionary(language, 'no_activities_available')}
+							</Text>
+						) : (
+							<>
+								<ActivityTable 
+									items={item.milestones}
+									title="Milestones"
+									type="milestone"
+									campaignId={item.id}
+									linkedUserId={linkedUserIdForActivities}
+									isEnrolled={isUserEnrolled}
+								/>
+								<ActivityTable 
+									items={item.extraCreditActivities}
+									title="Extra Credit Activities"
+									type="activity"
+									campaignId={item.id}
+									linkedUserId={linkedUserIdForActivities}
+									isEnrolled={isUserEnrolled}
+								/>
+							</>
+						)}
 					</Box>
 				)}
 			</VStack>
@@ -435,14 +565,14 @@ console.log('library.baseUrl:', library.baseUrl);
 							</ActionsheetItemText>
 						</ActionsheetItem>
 					)}
-					{filterBy !== 'linkedUserCampaigns' && (
+					{filterBy !== 'linkedUserCampaigns' && selectedCampaign?.enrolled && (
 						<React.Fragment>
 							<ActionsheetItem onPress={handleEmailNotificationOptions}>
 								<ActionsheetItemText>
 									{selectedCampaign?.optInToCampaignEmailNotifications ? 'Opt Out of Notifications' : 'Opt in to Notifications'}
 								</ActionsheetItemText>
 							</ActionsheetItem>
-							{library?.campaignLeaderboardDisplay === 'displayUser' && (
+							{library?.displayCampaignLeaderboard && library?.campaignLeaderboardDisplay === 'displayUser' && (
 								<ActionsheetItem onPress={handleLeaderboardOptions}>
 									<ActionsheetItemText>
 										{selectedCampaign?.optInToCampaignLeaderboard ? 'Opt Out of Leaderboard' : 'Opt in to Leaderboard'}
@@ -452,7 +582,7 @@ console.log('library.baseUrl:', library.baseUrl);
 						</React.Fragment>
 					)}
 					<ActionsheetItem onPress={handleCloseActions}>
-						<ActionsheetItemText>Cancel</ActionsheetItemText>
+						<ActionsheetItemText>{getTermFromDictionary(language, 'cancel')}</ActionsheetItemText>
 					</ActionsheetItem>
 				</ActionsheetContent>
 			</Actionsheet>
@@ -514,19 +644,21 @@ console.log('library.baseUrl:', library.baseUrl);
 
 			{status === 'loading' || isFetching ? (
 				<Center flex={1}>
-					<Text>Loading...</Text>
+					<Text>{getTermFromDictionary(language, 'loading')}</Text>
 				</Center>
 			) : status === 'error' ? (
 				<Center flex={1}>
-					<Text>Error loading campaigns</Text>
+					<Text>{getTermFromDictionary(language, 'campaign_loading_error')}</Text>
 				</Center>
+			) : campaignsData.length === 0 ? (
+				<EmptyComponent />
 			) : filterBy === 'linkedUserCampaigns' ? (
 				<ScrollView>
 					{Object.entries(groupedCampaigns).map(([userName, { userId, campaigns: groupedCampaignsList}]) => (
 						<Box key={String(userId)} mb="$6">
 							<Box px="$4" py="$2" bg="$coolGray200">
 								<Text fontSize="$lg" fontWeight="$bold">
-									Campaigns for: {String(userName)}
+									{getTermFromDictionary(language, 'campaigns_for_linked_user')}: {String(userName)}
 								</Text>
 							</Box>
 
@@ -552,6 +684,11 @@ console.log('library.baseUrl:', library.baseUrl);
 					data={campaignsData}
 					ListEmptyComponent={EmptyComponent}
 					renderItem={({ item }) => {
+
+						 if (!item) {
+								return null;
+							}
+
 						if (!item) return null;
 						
 						return renderCampaignItem({
@@ -561,6 +698,7 @@ console.log('library.baseUrl:', library.baseUrl);
 							onOpenActions: () => handleOpenActions(item, filterBy === 'linkedUserCampaigns' ? item.linkedUserId : null),
 						});
 					}}
+
 					keyExtractor={(item, index) => item?.id ? String(item.id) : String(index)}
 					contentContainerStyle={{ paddingBottom: 30 }}
 				/>
