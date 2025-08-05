@@ -42,6 +42,7 @@ import { Image } from 'expo-image';
 import { setCurrentClient } from '@sentry/react-native';
 import * as Sharing from 'expo-sharing';
 import * as FileSystem from 'expo-file-system';
+import PlaceholderImg from '../../../assets/digital-reward-placeholder.png';
 
 // Constants
 const PAGE_SIZE = 20;
@@ -270,7 +271,17 @@ export const MyCampaigns = () => {
 		let actualImageUrl = imageUrl;
 
 		// Check if we should show placeholder
-		if (item.isPlaceholderImage) {
+		if (item.isPlaceholderImage) {	
+			if (item.useTplPlaceholder) {
+				return (
+				<VStack space="sm">
+				<Image
+					source={PlaceholderImg}
+					style={{ width: 100, height: 100 }}
+				/>
+			</VStack>
+				);
+			}
 			// Use the placeholder image URL instead
 			actualImageUrl = buildImageUrl(item.badgeImage); // This should now be the placeholder
 			hasImage = true; // Show the placeholder image
