@@ -39,6 +39,7 @@ export const NotificationPermissionStatus = () => {
                setAppStateVisible(appState.current);
           });
 
+          /* focus is invalid RN
           const subscriptionAndroid = AppState.addEventListener('focus', async (nextAppState) => {
                const { status } = await Notifications.getPermissionsAsync();
                setPermissionStatus(status === 'granted');
@@ -46,10 +47,14 @@ export const NotificationPermissionStatus = () => {
                setAppStateVisible(appState.current);
           });
 
+           */
+
           return () => {
                subscription.remove();
-               subscriptionAndroid.remove();
+               //subscriptionAndroid.remove();
           };
+
+
      }, []);
 
      return (
@@ -84,106 +89,11 @@ export const NotificationPermissionDescription = () => {
      const appState = React.useRef(AppState.currentState);
      const [appStateVisible, setAppStateVisible] = React.useState(appState.current);
 
-     React.useLayoutEffect(() => {
-          if (prevRoute === 'notifications_onboard') {
-               navigation.setOptions({
-                    headerLeft: () => (
-                         <Button bg="transparent" onPress={() => navigate('MoreMenu')} mr="$3" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
-                              <ButtonIcon size="lg" variant="outline" borderWidth={0} color={theme['colors']['primary']['baseContrast']} as={ChevronLeftIcon} />
-                         </Button>
-                    ),
-               });
-          }
-     }, [navigation]);
-
-     useFocusEffect(
-          React.useCallback(() => {
-               const update = async () => {
-                    await createChannelsAndCategories();
-                    if (expoToken) {
-                         if (aspenToken) {
-                              await getPreferences();
-                         }
-                    }
-               };
-               update().then(() => {
-                    return () => update();
-               });
-          }, [])
-     );
-
-     React.useEffect(() => {
-          (async () => {
-               const { status } = await Notifications.getPermissionsAsync();
-               setPermissionStatus(status === 'granted');
-
-               if (status === 'granted') {
-                    const token = (
-                         await Notifications.getExpoPushTokenAsync({
-                              projectId: Constants.expoConfig.extra.eas.projectId,
-                         })
-                    ).data;
-
-                    if (token) {
-                         if (!_.isEmpty(user.notification_preferences)) {
-                              const tokenStorage = user.notification_preferences;
-                              if (_.find(tokenStorage, _.matchesProperty('token', token))) {
-                                   updateAspenToken(true);
-                                   updateExpoToken(token);
-                              }
-                         }
-                    }
-                    await getPreferences();
-               }
-          })();
-
-          const subscription = AppState.addEventListener('change', async (nextAppState) => {
-               if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
-                    console.log('app is active again!');
-                    const { status } = await Notifications.getPermissionsAsync();
-                    console.log('new status: ' + status);
-                    setPermissionStatus(status === 'granted');
-                    if (status === 'granted') {
-                         const token = (
-                              await Notifications.getExpoPushTokenAsync({
-                                   projectId: Constants.expoConfig.extra.eas.projectId,
-                              })
-                         ).data;
-
-                         if (token) {
-                              if (!_.isEmpty(user.notification_preferences)) {
-                                   const tokenStorage = user.notification_preferences;
-                                   if (_.find(tokenStorage, _.matchesProperty('token', token))) {
-                                        updateAspenToken(true);
-                                        updateExpoToken(token);
-                                   }
-                              }
-                         }
-                         await addNotificationPermissions();
-                         await getPreferences();
-                    }
-
-                    if (status === 'denied') {
-                         console.log('removing notification preferences from Discovery...');
-                         await revokeNotificationPermissions();
-                         await getPreferences();
-                         updateExpoToken(false);
-                         updateAspenToken(false);
-                    }
-               }
-
-               appState.current = nextAppState;
-               setAppStateVisible(appState.current);
-          });
-
-          return () => {
-               subscription.remove();
-          };
-     }, []);
-
      const addNotificationPermissions = async () => {
           console.log('Adding notification permissions...');
-          await createChannelsAndCategories();
+          await createChannelsAndCategories().then(() => {
+               console.log('Finished creating channels and categories')
+          });
 
           console.log('Registering push notifications...');
           await registerForPushNotificationsAsync(library.baseUrl).then(async (result) => {
@@ -257,6 +167,110 @@ export const NotificationPermissionDescription = () => {
           }
      };
 
+     React.useLayoutEffect(() => {
+          if (prevRoute === 'notifications_onboard') {
+               navigation.setOptions({
+                    headerLeft: () => (
+                         <Button bg="transparent" onPress={() => navigate('MoreMenu')} mr="$3" hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}>
+                              <ButtonIcon size="lg" variant="outline" borderWidth={0} color={theme['colors']['primary']['baseContrast']} as={ChevronLeftIcon} />
+                         </Button>
+                    ),
+               });
+          }
+     }, [navigation]);
+
+     useFocusEffect(
+          React.useCallback(() => {
+               const update = async () => {
+                    await createChannelsAndCategories().then(() => {
+                         console.log('Finished creating channels and categories')
+                    });
+                    await getPreferences();
+                    if (expoToken) {
+                         if (aspenToken) {
+                              await getPreferences();
+                         } else {
+                              console.log("no aspen token found")
+                         }
+                    } else {
+                         console.log("no expo token found")
+                    }
+               };
+               update().then(() => {
+                    return () => update();
+               });
+          }, [])
+     );
+
+     React.useEffect(() => {
+          (async () => {
+               const { status } = await Notifications.getPermissionsAsync();
+               setPermissionStatus(status === 'granted');
+
+               if (status === 'granted') {
+                    const token = (
+                         await Notifications.getExpoPushTokenAsync({
+                              projectId: Constants.expoConfig.extra.eas.projectId,
+                         })
+                    ).data;
+
+                    if (token) {
+                         if (!_.isEmpty(user.notification_preferences)) {
+                              const tokenStorage = user.notification_preferences;
+                              if (_.find(tokenStorage, _.matchesProperty('token', token))) {
+                                   updateAspenToken(true);
+                                   updateExpoToken(token);
+                              }
+                         }
+                    }
+                    await getPreferences();
+               }
+          })();
+
+          const subscription = AppState.addEventListener('change', async (nextAppState) => {
+               if (appState.current.match(/inactive|background/) && nextAppState === 'active') {
+                    console.log('app is active again!');
+                    const { status } = await Notifications.getPermissionsAsync();
+                    console.log('new status: ' + status);
+                    setPermissionStatus(status === 'granted');
+                    if (status === 'granted') {
+                         const token = (
+                              await Notifications.getExpoPushTokenAsync({
+                                   projectId: Constants.expoConfig.extra.eas.projectId,
+                              })
+                         );
+
+                         if (token) {
+                              if (!_.isEmpty(user.notification_preferences)) {
+                                   const tokenStorage = user.notification_preferences;
+                                   if (_.find(tokenStorage, _.matchesProperty('token', token))) {
+                                        updateAspenToken(true);
+                                        updateExpoToken(token);
+                                   }
+                              }
+                         }
+                         await addNotificationPermissions();
+                         await getPreferences();
+                    }
+
+                    if (status === 'denied') {
+                         console.log('removing notification preferences from Discovery...');
+                         await revokeNotificationPermissions();
+                         await getPreferences();
+                         updateExpoToken(false);
+                         updateAspenToken(false);
+                    }
+               }
+
+               appState.current = nextAppState;
+               setAppStateVisible(appState.current);
+          });
+
+          return () => {
+               subscription.remove();
+          };
+     }, []);
+
      if (isLoading) {
           return loadingSpinner();
      }
@@ -289,7 +303,7 @@ export const NotificationPermissionDescription = () => {
                               </Box>
                          ) : null}
                     </Box>
-                    <NotificationPermissionUpdate permissionStatus={permissionStatus} setPermissionStatus={setPermissionStatus} />
+                    <NotificationPermissionUpdate permissionStatus={permissionStatus} setPermissionStatus={setPermissionStatus} addNotificationPermissions={addNotificationPermissions} />
                </VStack>
           </ScrollView>
      );

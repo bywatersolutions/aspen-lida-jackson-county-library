@@ -15,7 +15,6 @@ import { GLOBALS } from '../util/globals';
 import { popAlert, popToast } from './loadError';
 
 export async function registerForPushNotificationsAsync(url) {
-     console.log('url: ' + url);
      let token = false;
      let checkPermissionsManually = false;
      if (Device.isDevice) {
@@ -64,12 +63,9 @@ export async function registerForPushNotificationsAsync(url) {
           }
      } else {
           console.log('Creating a fake token for simulators...');
-          token = (
-               await Notifications.getExpoPushTokenAsync({
-                    projectId: Constants.expoConfig.extra.eas.projectId,
-               })
-          ).data;
-          console.log('token: ' + token);
+          token = await Notifications.getExpoPushTokenAsync({
+               projectId: Constants.expoConfig.extra.eas.projectId,
+          });
           return token;
      }
 
