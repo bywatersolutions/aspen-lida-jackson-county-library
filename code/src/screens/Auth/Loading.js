@@ -39,11 +39,11 @@ export const LoadingScreen = () => {
      const navigation = useNavigation();
      const queryClient = useQueryClient();
      const isFocused = useIsFocused();
-     //const state = useNavigationState((state) => state);
      const [progress, setProgress] = React.useState(0);
      const [isReloading, setIsReloading] = React.useState(false);
      const [hasError, setHasError] = React.useState(false);
      const [errorMessage, setErrorMessage] = React.useState(null);
+     const [errorTitle, setErrorTitle] = React.useState(null);
      const [hasUpdate, setHasUpdate] = React.useState(false);
      const [incomingUrl, setIncomingUrl] = React.useState('');
      const [hasIncomingUrlChanged, setIncomingUrlChanged] = React.useState(false);
@@ -126,13 +126,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to determine catalog status");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading catalog status failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error checking catalog status. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error checking catalog status. Please try again or contact the library.')
           }
      });
 
@@ -154,7 +156,8 @@ export const LoadingScreen = () => {
                logDebugMessage("Setting Error to true because loading active language failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading user preferred language. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading patron preferred language. Please try again or contact the library.')
           }
      });
 
@@ -178,13 +181,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load library languages");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading languages failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading languages. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error loading languages. Please try again or contact the library.')
           }
      });
 
@@ -223,12 +228,14 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load library configuration");
                }
           },
           onError: () => {
                logWarnMessage("Setting Error to true because loading library system failed");
                setHasError(true);
-               setErrorMessage('Unknown error loading library system settings. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error loading library configuration. Please try again or contact the library.')
           }
      });
 
@@ -261,14 +268,14 @@ export const LoadingScreen = () => {
                     logDebugMessage(data);
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
-                    setErrorMessage(error.message);
+                    setErrorMessage("Unable to load patron profile. " + error.message);
                }
           },
           onError: (error) => {
                logDebugMessage("Error reloading user profile");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading user profile. Please try again.')
+               setErrorMessage('Error loading user profile. Please try again or contact the library.')
           }
      });
 
@@ -288,13 +295,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load menu links")
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading library links failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading library links. Please try again.');
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading library links. Please try again or contact the library.');
           }
      });
 
@@ -315,13 +324,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load browse categories");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading browse categories failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading browse categories. Please try again.');
+               setErrorTitle(null);
+               setErrorMessage('Error loading browse categories. Please try again or contact the library.');
           }
      });
 
@@ -343,13 +354,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load browse category list");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading browse category list failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading browse category list. Please try again.');
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading browse category list. Please try again or contact the library.');
           }
      });
 
@@ -369,13 +382,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load library branches");
                }
           },
           onError: (error) => {
                logWarnMessage("Setting Error to true because library location failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading library branches. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error loading library branches. Please try again or contact the library.')
           }
      });
 
@@ -400,13 +415,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load self check settings");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading self check settings failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading self check settings. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading self check settings. Please try again or contact the library.')
           }
 
      });
@@ -429,13 +446,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load linked accounts");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading linked accounts failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading linked accounts. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading linked accounts. Please try again or contact the library.')
           }
      });
 
@@ -456,13 +475,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load system messages");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading system messages failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading system messages. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Unknown error loading system messages. Please try again or contact the library.')
           }
      });
 
@@ -496,13 +517,15 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load patron app preferences");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading app preferences failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading app preferences. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error loading patron app preferences. Please try again or contact the library.')
           }
      });
 
@@ -524,18 +547,20 @@ export const LoadingScreen = () => {
                     const error = getErrorMessage(data.code ?? 0, data.problem);
                     setHasError(true);
                     setErrorMessage(error.message);
+                    setErrorTitle("Unable to load notification history");
                }
           },
           onError: (error) => {
                logDebugMessage("Setting Error to true because loading notification history failed");
                logErrorMessage(error);
                setHasError(true);
-               setErrorMessage('Unknown error loading notification history. Please try again.')
+               setErrorTitle(null);
+               setErrorMessage('Error loading notification history. Please try again or contact the library.')
           }
      });
 
      if (hasError) {
-          return <ForceLogout reason={errorMessage} />;
+          return <ForceLogout title={errorTitle} reason={errorMessage} />;
      }
 
      if (catalogStatus > 0) {

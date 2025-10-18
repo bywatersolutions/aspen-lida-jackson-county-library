@@ -7,7 +7,7 @@ import {LanguageContext, ThemeContext} from '../../context/initialContext';
 import {getTermFromDictionary} from '../../translations/TranslationService';
 
 export const ForceLogout = (props) => {
-     const { reason } = props;
+     const { title, reason } = props;
 	const { theme, colorMode, textColor } = React.useContext(ThemeContext);
 	const { language } = React.useContext(LanguageContext);
 	const { signOut } = React.useContext(AuthContext);
@@ -20,7 +20,7 @@ export const ForceLogout = (props) => {
 			<AlertDialog leastDestructiveRef={cancelRef} isOpen={isOpen} onClose={onClose}>
 				<AlertDialogBackdrop/>
 				<AlertDialogContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']}>
-					<AlertDialogHeader><Heading color={textColor}>{getTermFromDictionary(language, 'error')}</Heading></AlertDialogHeader>
+					<AlertDialogHeader><Heading color={textColor}>{title ?? getTermFromDictionary(language, 'error')}</Heading></AlertDialogHeader>
 					<AlertDialogBody><Text color={textColor}>{reason ?? getTermFromDictionary(language, 'error_invalid_session')}</Text></AlertDialogBody>
 					<AlertDialogFooter>
 						<ButtonGroup space="sm">
