@@ -30,28 +30,7 @@ export async function fetchSavedEvents(page = 1, pageSize = 25, filter = 'upcomi
           },
      });
 
-     const response = await api.post('/EventAPI?method=getSavedEvents', postBody);
-     let data = [];
-     let morePages = false;
-     if (response.ok) {
-          data = response.data;
-          if (data.page_current !== data.page_total) {
-               morePages = true;
-          }
-     } else {
-          getErrorMessage({ statusCode: response.status, problem: response.problem, sendToSentry: true });
-          logErrorMessage(response);
-     }
-
-     return {
-          events: data.events ?? [],
-          totalResults: data.totalResults ?? 0,
-          curPage: data.page_current ?? 0,
-          totalPages: data.page_total ?? 0,
-          hasMore: morePages,
-          filter: data.filter ?? filter,
-          message: data?.message ?? null,
-     };
+     return await api.post('/EventAPI?method=getSavedEvents', postBody);
 }
 
 /**
