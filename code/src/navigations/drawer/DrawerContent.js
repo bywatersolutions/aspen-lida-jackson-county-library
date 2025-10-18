@@ -158,6 +158,7 @@ export const DrawerContent = () => {
                               logWarnMessage(data);
                               setInvalidSession(true);
                          }
+                         logErrorMessage(data); // go ahead and log the error so it goes to Sentry in hopes to identify issues
                     }
                } else {
                     logDebugMessage("Error reloading user profile");
