@@ -141,7 +141,7 @@ export const useNotificationPermissions = (library, user, updateExpoToken, updat
 
             // Get current token before revoking
             const tokenData = !Device.isDevice
-                ? { data: 'simulator-test-token' }
+                ? { data: 'ExponentPushToken[testToken' + Device.modelName + ']' }
                 : await Notifications.getExpoPushTokenAsync({
                     projectId: Constants.expoConfig.extra.eas.projectId,
                 });
