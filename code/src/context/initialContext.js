@@ -22,6 +22,8 @@ export const UserContext = React.createContext({
      accounts: [],
      updateLists: () => {},
      lists: [],
+     listGroups: [],
+     updateListGroups: () => {},
      updateLanguage: () => {},
      language: [],
      updatePickupLocations: () => {},
@@ -58,7 +60,6 @@ export const UserContext = React.createContext({
      userHoldPendingSortMethod: 'sortTitle',
      updateUserHoldReadySortMethod: 'expire',
      updateUserHoldPendingSortMethod: () => {},
-     updateUserHoldReadySortMethod: () => {},
      preferredPickupLocationIsValid: true,
      updatePreferredPickupLocationIsValid: () => {},
      preferredPickupLocationWarning: "",
@@ -376,6 +377,7 @@ export const UserProvider = ({ children }) => {
      const [accounts, setLinkedAccounts] = useState([]);
      const [viewers, setLinkedViewerAccounts] = useState([]);
      const [lists, setLists] = useState([]);
+     const [listGroups, setListGroups] = useState([]);
      const [language, setLanguage] = useState('en');
      const [languageDisplayName, setLanguageDisplayName] = useState('English');
      const [locations, setPickupLocations] = useState([]);
@@ -433,6 +435,7 @@ export const UserProvider = ({ children }) => {
      const resetUser = () => {
           setUser({});
           setLists({});
+          setListGroups({});
           setLinkedAccounts({});
           setLanguage({});
           logDebugMessage('reset UserContext');
@@ -442,6 +445,11 @@ export const UserProvider = ({ children }) => {
           setLists(data);
           //logDebugMessage('updated lists in UserContext');
      };
+
+     const updateListGroups = (data) => {
+          setListGroups(data);
+          //logDebugMessage('updated list groups in UserContext');
+     }
 
      const updateLinkedAccounts = (data) => {
           setLinkedAccounts(data);
@@ -631,7 +639,7 @@ export const UserProvider = ({ children }) => {
 
      const updateUserDebugMessage = (data) => {
           setUserDebugMessage(userDebugMessage => {
-               newArray = [data, ...userDebugMessage];
+               const newArray = [data, ...userDebugMessage];
                if (newArray.length > 50) {
                     // Return only the first 50 elements (indices 0 through 49)
                     return newArray.slice(0, 50);
@@ -678,6 +686,8 @@ export const UserProvider = ({ children }) => {
                     resetUser,
                     lists,
                     updateLists,
+                    listGroups,
+                    updateListGroups,
                     accounts,
                     updateLinkedAccounts,
                     viewers,
