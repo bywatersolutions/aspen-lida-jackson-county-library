@@ -169,6 +169,10 @@ const DisplayBrowseCategoryRecord = ({record}) => {
      }
 
      let id = record.key ?? record.id;
+     if (typeof id === 'string' && (id.startsWith('bc_') || id.startsWith('sbc_'))) {
+          id = record.textId;
+     }
+
      if (type === 'Event') {
           if (_.includes(id, 'lc_')) {
                type = 'library_calendar_event';
@@ -199,6 +203,15 @@ const DisplayBrowseCategoryRecord = ({record}) => {
           isNew = record.isNew;
      }
 
+     let getTitle = record.title_display ?? record.title;
+     if (typeof getTitle === 'undefined') {
+          if(record.label) {
+               getTitle = record.label;
+          } else {
+               getTitle = 'Unknown';
+          }
+     }
+
      const onPressItem = (key, type, title) => {
           if (type === 'List' || type === 'list') {
                navigateStack('BrowseTab', 'SearchByList', {
@@ -206,7 +219,7 @@ const DisplayBrowseCategoryRecord = ({record}) => {
                     title: title,
                     prevRoute: 'HomeScreen',
                });
-          } else if (type === 'SavedSearch') {
+          } else if (type === 'SavedSearch' || type === 'savedsearch') {
                navigateStack('BrowseTab', 'SearchBySavedSearch', {
                     id: key,
                     title: title,
@@ -243,7 +256,7 @@ const DisplayBrowseCategoryRecord = ({record}) => {
 
      return (
           <Pressable
-               onPress={() => onPressItem(id, type, record.title_display ?? record.title)}
+               onPress={() => onPressItem(id, type, getTitle)}
                ml="$1"
                mr="$3"
                sx={{
@@ -257,7 +270,7 @@ const DisplayBrowseCategoryRecord = ({record}) => {
                     },
                }}>
                <Image
-                    alt={record.title_display ?? record.title}
+                    alt={getTitle}
                     source={imageUrl}
                     style={{
                          width: '100%',
