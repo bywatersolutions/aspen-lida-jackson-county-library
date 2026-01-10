@@ -68,7 +68,10 @@ export const EditListGroupParent = ({id, parentId, handleUpdate}) => {
                                                        <SelectDragIndicator />
                                                   </SelectDragIndicatorWrapper>
                                                   {_.map(listGroups.groups, function (item, index, array) {
-                                                       return <SelectItem key={index} value={item.id} label={item.title} bgColor={newListGroupParentId === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: newListGroupParentId === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
+                                                       if(item.id === id || item.id === parentId || item.parentGroupId === id) {
+                                                            return null;
+                                                       }
+                                                       return <SelectItem key={index} disabled={true} value={item.id} label={item.title} bgColor={newListGroupParentId === item.id ? theme['colors']['tertiary']['300'] : ''} sx={{ _text: { color: newListGroupParentId === item.id ? theme['colors']['tertiary']['500-text'] : textColor } }} />;
                                                   })}
                                              </SelectContent>
                                         </SelectPortal>
