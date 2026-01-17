@@ -234,16 +234,18 @@ const CreateList = (props) => {
                                         <FormControlLabelText color={textColor}>{getTermFromDictionary(language, 'choose_existing_list_group')}</FormControlLabelText>
                                    </FormControlLabel>
                                    <Select
-                                        selectedValue={existingGroupId !== -1 ? existingGroupId : listGroups.groups[0].id}
-                                        defaultValue={existingGroupId !== -1 ? existingGroupId : listGroups.groups[0].id}
+                                        selectedValue={existingGroupId}
+                                        defaultValue={existingGroupId}
                                         onValueChange={(itemValue) => {
                                              setExistingGroupId(itemValue);
+                                             setNestedGroup(itemValue);
+                                             console.log(itemValue);
                                         }}>
                                         <SelectTrigger variant="outline" size="md">
                                              {existingGroupId && existingGroupId !== -1 ? (
                                                        _.map(Object.values(listGroups.groups), function (group, selectedIndex, array) {
                                                             if (group.id === existingGroupId) {
-                                                                 return <SelectInput placeholder={group.title} value={group.id} color={textColor} />;
+                                                                 return <SelectInput value={group.title} color={textColor} />;
                                                             }
                                                        })
                                                   ) :
@@ -280,7 +282,7 @@ const CreateList = (props) => {
                                         isLoadingText={getTermFromDictionary(language, 'creating_list', true)}
                                         onPress={async () => {
                                              setAdding(true);
-                                             await createList(title, description, isPublic, library.baseUrl, addToGroup, nestedGroup, newGroupName).then(async (res) => {
+                                             await createList(title, description, isPublic, library.baseUrl, addToGroup, nestedGroup, newGroupName, existingGroupId).then(async (res) => {
                                                   let status = 'success';
                                                   if (!res.success) {
                                                        status = 'danger';

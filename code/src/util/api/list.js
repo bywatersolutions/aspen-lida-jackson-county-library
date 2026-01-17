@@ -67,8 +67,9 @@ export function formatLists(data) {
  * @param {string} addToListGroup
  * @param {int} addToListGroupNestedId
  * @param {string} addToListGroupNewName
+ * @param {int} existingListId
  **/
-export async function createList(title, description, isPublic = false, url, addToListGroup, addToListGroupNestedId, addToListGroupNewName) {
+export async function createList(title, description, isPublic = false, url, addToListGroup, addToListGroupNestedId, addToListGroupNewName, existingListId) {
      const postBody = await postData();
      const discovery = create({
           baseURL: url,
@@ -80,11 +81,12 @@ export async function createList(title, description, isPublic = false, url, addT
                description,
                isPublic,
                addToListGroupOption: addToListGroup,
-               addToListGroupNested: addToListGroupNestedId,
+               addToListGroupNested: addToListGroupNestedId === '' ? existingListId : addToListGroupNestedId,
                addToListGroupNewName: addToListGroupNewName,
           },
      });
      const response = await discovery.post(`${endpoint.url}createList`, postBody);
+     console.log(response);
      if (response.ok) {
           if (response.data.result.listId) {
                PATRON.listLastUsed = response.data.result.listId;
