@@ -36,7 +36,7 @@ const DisplayBrowseCategory = ({category}) => {
      }
 
      const showSubCategoryRecords =
-          subCategories.length > 0 && subCategories[selectedSubCategoryIndex]?.records?.length > 0;
+          subCategories.length > 0 && (subCategories[selectedSubCategoryIndex]?.records?.length > 0 || subCategories[selectedSubCategoryIndex].records?.titles?.length > 0);
 
      const maxItems = 7;
 
@@ -49,7 +49,12 @@ const DisplayBrowseCategory = ({category}) => {
      let subCategoryRecords = [];
      let subCategoryHasMore = false;
      if (showSubCategoryRecords) {
-          const allRecords = subCategories[selectedSubCategoryIndex].records;
+          let allRecords;
+          if(category.textId === 'system_user_lists') {
+               allRecords = subCategories[selectedSubCategoryIndex].records.titles;
+          } else {
+               allRecords = subCategories[selectedSubCategoryIndex].records;
+          }
           subCategoryHasMore = allRecords.length > maxItems;
           subCategoryRecords = subCategoryHasMore ? allRecords.slice(0, maxItems) : allRecords;
      }
