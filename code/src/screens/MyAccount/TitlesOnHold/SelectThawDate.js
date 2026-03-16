@@ -3,7 +3,7 @@ import {Text} from "react-native";
 import DateTimePickerModal from 'react-native-modal-datetime-picker';
 import { MaterialIcons } from '@expo/vector-icons';
 import {  ActionsheetIcon, ActionsheetItem, ActionsheetItemText, Button, ButtonGroup, ButtonText, Center, Checkbox, CheckboxIcon, CheckboxIndicator, CheckboxLabel, CloseIcon, Heading, HStack, Icon, Modal, ModalBackdrop, ModalBody, ModalCloseButton, ModalContent, ModalFooter, ModalHeader, useToken } from '@gluestack-ui/themed';
-import { LanguageContext } from '../../../context/initialContext';
+import { LanguageContext, ThemeContext } from '../../../context/initialContext';
 import { freezeHold, freezeHolds } from '../../../util/accountActions';
 import { getTermFromDictionary } from '../../../translations/TranslationService';
 
@@ -24,6 +24,8 @@ export const SelectThawDate = (props) => {
      const [isDatePickerVisible, setDatePickerVisibility] = React.useState(false);
      const [showIndefiniteWarning, setShowIndefiniteWarning] = React.useState(false);
      const [freezeIndefinite, setFreezeIndefinite] = React.useState(false);
+     //not including textColor here because its already passed into this component
+     const {theme, colorMode } = React.useContext(ThemeContext);
 
      const showDatePicker = () => {
           if(libraryContext.reactivateDateNotRequired ?? false)
@@ -72,43 +74,59 @@ export const SelectThawDate = (props) => {
                     </ActionsheetIcon> }
                     <ActionsheetItemText color={textColor}>{actionLabel}</ActionsheetItemText>
                </ActionsheetItem>
-               <Modal isOpen={showIndefiniteWarning} onClose={hideDatePicker}>
+               <Modal isOpen={showIndefiniteWarning} onClose={hideDatePicker} size="full" avoidKeyboard>
                     <ModalBackdrop/>
-                    <ModalContent maxWidth="90%" bg="white" _dark={{ bg: 'coolGray.800' }}>
+                    <ModalContent bgColor={colorMode === 'light' ? theme['colors']['warmGray']['50'] : theme['colors']['coolGray']['700']} maxWidth="95%">
                          <ModalHeader>
-                              <Heading size="md">{actionLabel}</Heading>
+                              <Heading size="sm" color={textColor}>{actionLabel}</Heading>
                               <ModalCloseButton hitSlop={{ top: 30, bottom: 30, left: 30, right: 30 }}>
                                    <Icon as={CloseIcon} color={textColor} />
                               </ModalCloseButton>
                          </ModalHeader>
                          <ModalBody>
                               <Text>{getTermFromDictionary("en", "freeze_indefinite_warning")}</Text>
-                              <Checkbox onChange={(value) => setFreezeIndefinite(value)} defaultIsChecked={freezeIndefinite}>
-                                   <CheckboxIndicator>
-                                        <CheckboxIcon/>
+                              <Checkbox 
+                                   onChange={(value) => setFreezeIndefinite(value)}
+                                   accessibilityLabel={getTermFromDictionary("en", "freeze_indefinite_checkbox")}
+                                   defaultIsChecked={freezeIndefinite}>
+                                   <CheckboxIndicator
+                                        sx={{
+                                        ':checked': {
+                                             borderColor: theme['colors']['primary']['500'],
+                                             backgroundColor: theme['colors']['primary']['500'],
+                                        },
+                                   }}>
+                                        {freezeIndefinite && <Icon as={MaterialIcons} name="check" color={theme['colors']['primary']['500-text']} size="sm" />}
                                    </CheckboxIndicator>
-                                   <CheckboxLabel>{getTermFromDictionary("en", "freeze_indefinite_checkbox")}</CheckboxLabel>
+                                   <CheckboxLabel pl="$2">
+                                        <Text color={textColor}>
+                                        {getTermFromDictionary("en", "freeze_indefinite_checkbox")}
+                                        </Text>
+                                   </CheckboxLabel>
                               </Checkbox>
                          </ModalBody>
                          <ModalFooter>
-                         <ButtonGroup space={2} size="md">
-                              <HStack >
-                              <Button style={{margin:5}} onPress={hideDatePicker}>
-                                   <ButtonText>{getTermFromDictionary("en", "cancel")}</ButtonText>
-                              </Button>
-                              <Button style={{margin:5}} onPress={() => {
-                                   if(freezeIndefinite)
-                                   {
-                                        onSelectDate();
-                                   } else 
-                                   {
-                                        setDatePickerVisibility(true);
-                                   }
-                              }}>
-                                   <ButtonText>{freezeIndefinite ? getTermFromDictionary("en", "freeze_hold_without_reactivation"): getTermFromDictionary("en", "freeze_hold_choose_reactivation")}</ButtonText>
-                              </Button>
-                              </HStack>
-                         </ButtonGroup>
+                              <ButtonGroup space={2} size="md">
+                                   <HStack >
+                                   <Button 
+                                        bgColor={theme['colors']['primary']['500']}
+                                        style={{margin:5}} 
+                                        onPress={hideDatePicker}>
+                                        <ButtonText color={theme['colors']['primary']['500-text']}>{getTermFromDictionary("en", "cancel")}</ButtonText>
+                                   </Button>
+                                   <Button style={{margin:5}} onPress={() => {
+                                        if(freezeIndefinite)
+                                        {
+                                             onSelectDate();
+                                        } else 
+                                        {
+                                             setDatePickerVisibility(true);
+                                        }
+                                   }}>
+                                        <ButtonText color={theme['colors']['primary']['500-text']}>{freezeIndefinite ? getTermFromDictionary("en", "freeze_hold_without_reactivation"): getTermFromDictionary("en", "freeze_hold_choose_reactivation")}</ButtonText>
+                                   </Button>
+                                   </HStack>
+                              </ButtonGroup>
                          </ModalFooter>
                     </ModalContent>
                </Modal>
